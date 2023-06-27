@@ -114,8 +114,59 @@ class Pendu{
       case 'r':
       case 'l':
       case 'lettre':
+        
+        if(!(attribut.length == 1))
+          return;
 
-        this.repondre(command);
+        if(!this.inGame()){
+
+          this.repondre(`**${pseudo}** action impossible! , le jeu n'est pas lancé (!start) !`)
+          return ;
+        }
+
+        if(!this.isInGame(idPseudo)){
+        
+          this.repondre(`**${pseudo}** action impossible! , vous n'êtes pas dans la partie (!join)!`)
+
+        } else {
+
+          let indPlayer = this.listePlayer.findIndex(player => player.getId() == idPseudo);
+
+          if(this.joue(attribut)){
+
+            this.repondre(`**------PENDU------**`)
+
+            if(this.controleGagne()){
+
+              this.listePlayer[indPlayer].point += 5;	
+              this.repondre(`**FELICITATION ${pseudo}!**`);
+              this.repondre(`le mot était: ` + this.getMotEtoile());
+              
+              this.repondre(`**CLASSEMENT PENDU**`)
+              this.repondre(this.recupListePlayer());
+                            
+              this.tirerMot();
+
+            } else {
+
+              this.listePlayer[indPlayer].point ++;
+              this.repondre(`**BRAVO ${pseudo}!**`);
+              this.repondre('mot à trouver: ' + this.getMotEtoile());
+
+            }
+
+          } else {
+
+            this.repondre(`**------PENDU------**`);
+            this.listePlayer[indPlayer].point = this.listePlayer[indPlayer].point > 0 ? this.listePlayer[indPlayer].point - 1 : 0; 
+            this.repondre(`**PERDU ${pseudo}!**`);
+            this.repondre('mot à trouver: ' + this.getMotEtoile());
+
+          }
+
+        }
+
+        
 
     }
 
@@ -143,14 +194,19 @@ class Pendu{
   nouvellePartie(){
 
     this.partieStart = true;
-    this.tirerMot();
     this.repondre(`lancement d'une nouvelle partie`);
+    this.repondre('Réinitialisation des scores !')
+    this.razScore();
+
+    this.repondre(this.recupListePlayer());
+
+    this.tirerMot();
 
   }
 
   finPartie(){
+    this.partieStart = false;
     this.repondre('fin de partie');
-    this.razScore();
   }
 
   tirerMot(){
@@ -168,8 +224,10 @@ class Pendu{
       this.motEtoile = '';
       this.motEtoile = ''.padEnd(this.motAChercher.length,'*');
 
-      this.repondre(this.getMotEtoile())
+      this.repondre("**------PENDU------**");
 
+      this.repondre('mot à trouver: ' + this.getMotEtoile());
+      
     });
 
   }
@@ -181,18 +239,26 @@ class Pendu{
   }
 
   joue(lettre){
+
     let trouve = false;
 
-    this.motAChercher.forEach((l,i) => {
+    this.motAChercher.split('').forEach((l,i) => {
       if(this.motEtoile[i] == '*' && l == lettre.toUpperCase()){
         
-        this.motEtoile[i] == lettre.toUpperCase();
+        let charArray = this.motEtoile.split(""); // Conversion en tableau de caractères
+        charArray[i] = lettre.toUpperCase(); // Remplacement du deuxième caractère (index 1)
+        this.motEtoile = charArray.join(""); // Conversion du tableau en chaîne de caractères
+       
         trouve = true
 
       }
     })
 
     return trouve;
+  }
+
+  controleGagne(){
+    return this.motEtoile == this.motAChercher;
   }
 
   razScore(){

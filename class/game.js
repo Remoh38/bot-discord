@@ -46,23 +46,7 @@ class Game{
 
     }
 
-  }
-
-  /* if(texteReception[0] == '!'){
-
-    switch (texteReception.substr(1).toUpperCase()) {
-
-      
-
-        
-    
-      default:
-        break;
-    }
-
-  } */
-
-  
+  }  
 
   isInit(){
     return this.init;
