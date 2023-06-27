@@ -52,9 +52,9 @@ class Game{
     return this.init;
   }
 
-  repondre(idChannel,message){
+  /* repondre(idChannel,message){
     this.repondreChannel(idChannel,message)
-  }
+  } */
 
 }
 

@@ -185,7 +185,7 @@ class Pendu{
     ${
       this.listePlayer.sort((a,b) => a.point - b.point).map(player =>  "-" + player.getName() + "- " + player.getPoint() + " pt(s)")
     }
-    `     
+    `      
 
   }
 
@@ -194,13 +194,36 @@ class Pendu{
   nouvellePartie(){
 
     this.partieStart = true;
-    this.repondre(`lancement d'une nouvelle partie`);
-    this.repondre('Réinitialisation des scores !')
-    this.razScore();
+    this.repondre(`lancement d'une nouvelle partie`).then(() => {
 
-    this.repondre(this.recupListePlayer());
+      this.repondre(`Réinitialisation des scores !`).then(() => {
 
-    this.tirerMot();
+        this.razScore();
+
+        this.repondre(this.recupListePlayer()).then(() => {
+
+          this.tirerMot().then(mot => {
+
+            this.motAChercher = deburr(mot).toUpperCase();
+            this.motEtoile = '';
+            this.motEtoile = ''.padEnd(this.motAChercher.length,'*');
+
+            this.repondre("**------PENDU------**").then(() => {
+
+              this.repondre('mot à trouver: ' + this.getMotEtoile());
+
+            });
+            
+          });
+
+        })
+
+      });
+
+    });
+    
+
+    
 
   }
 
@@ -211,24 +234,22 @@ class Pendu{
 
   tirerMot(){
 
-    fs.readFile('./jeux/pendu/mots.csv', 'utf8', (err, data) => {
-      if (err) {
-        console.error('Une erreur s\'est produite lors de la lecture du fichier :', err);
-        return;
-      }
-    
-      let tabMot = data.split('\r\n');
-      let indRand = parseInt(Math.random() * tabMot.length);
+    return new Promise(resolve => {
 
-      this.motAChercher = deburr(tabMot[indRand]).toUpperCase();
-      this.motEtoile = '';
-      this.motEtoile = ''.padEnd(this.motAChercher.length,'*');
-
-      this.repondre("**------PENDU------**");
-
-      this.repondre('mot à trouver: ' + this.getMotEtoile());
+      fs.readFile('./jeux/pendu/mots.csv', 'utf8', (err, data) => {
+        if (err) {
+          console.error('Une erreur s\'est produite lors de la lecture du fichier :', err);
+          return;
+        }
       
-    });
+        let tabMot = data.split('\r\n');
+        let indRand = parseInt(Math.random() * tabMot.length);
+
+        resolve(tabMot[indRand]);
+        
+      });
+
+    })
 
   }
 
@@ -268,7 +289,17 @@ class Pendu{
   }
 
   repondre(message){
-    this.repondreChannel(this.channelId, message);
+
+    return new Promise(resolve => {
+
+      this.repondreChannel(this.channelId, message).then((data) => {
+        resolve();
+      })
+
+    })
+    
+    
+      
   }
 
 }

@@ -93,25 +93,31 @@ ws.onerror = (error) => {
 };
 
 
-function repondre(channelId,message){
+  function repondre(channelId,message){
+
+    return new Promise(resolve => {
+
+      const msgSend = {
+        content: message
+      };
   
-  const msgSend = {
-    content: message
-  };
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bot ${process.env.APIKEY}`
+      };
+  
+      axios.post(urlHttpPost + `${channelId}/messages`, msgSend, {headers})
+      .then(response => {
+        //console.log('Réponse du serveur:', response.data);
+        resolve(response.data);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la requête:', error.message);
+      });
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bot ${process.env.APIKEY}`
-  };
-
-  axios.post(urlHttpPost + `${channelId}/messages`, msgSend, {headers})
-  .then(response => {
-    //console.log('Réponse du serveur:', response.data);
-  })
-  .catch(error => {
-    console.error('Erreur lors de la requête:', error.message);
-  });
-}
+    })
+    
+  }
 
 app.get('/', (req, res) => {
   res.send(`Bot lancé!`)
