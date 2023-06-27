@@ -10,7 +10,12 @@ const apiKey = process.env.APIKEY;
 const urlWs = "wss://gateway.discord.gg"
 const urlHttpPost = `https://discord.com/api/v10/channels/`;
 
+const Game = require('./class/game');
+
 const ws = new WebSocket(urlWs);
+const tabChannel = [process.env.CHANNELIDPENDU,process.env.CHANNELIDQUIZZ];
+
+const myGame = new Game(repondre);
 
 ws.onopen = () => {
 
@@ -51,19 +56,24 @@ ws.onmessage = (message) => {
 
       ws.send(JSON.stringify(sendWS));
 
+      if(!myGame.isInit()){
+
+        myGame.initialisation();
+
+      }
+
       break;
 
     case 0:
 
-      let channelId = messRecup.d.channel_id;
+      if(messRecup.t == "MESSAGE_CREATE" && tabChannel.indexOf(messRecup.d.channel_id) != -1){
 
-      if(messRecup.t == "MESSAGE_CREATE" && [process.env.CHANNELIDPENDU,process.env.CHANNELIDQUIZZ].indexOf(channelId) != -1){
-
-        analyseCommande(channelId,messRecup.d.content,messRecup.d.username,messRecup.d.id);
+        if(!messRecup.d.content.startsWith('!'))
+          return;
+      
+        myGame.analyseCommande(messRecup.d.channel_id,messRecup.d.content.slice(1).split(' '),messRecup.d.author.username,messRecup.d.author.id);
 
       }
-
-
   
     default:
       break;
@@ -82,26 +92,10 @@ ws.onerror = (error) => {
   console.error('Erreur WebSocket :', error);
 };
 
-function analyseCommande(channelId,texteReception,pseudo,idPseudo){
-
-  if(texteReception[0] == '!'){
-
-    switch (texteReception.substr(1).toUpperCase()) {
-      case "START":
-      case "RUN":
-      case "S":
-        repondre(channelId,'ok')
-        break;
-    
-      default:
-        break;
-    }
-
-  }
-
-}
 
 function repondre(channelId,message){
+
+  //message = null;
   
   const msgSend = {
     content: message
@@ -114,7 +108,7 @@ function repondre(channelId,message){
 
   axios.post(urlHttpPost + `${channelId}/messages`, msgSend, {headers})
   .then(response => {
-    console.log('Réponse du serveur:', response.data);
+    //console.log('Réponse du serveur:', response.data);
   })
   .catch(error => {
     console.error('Erreur lors de la requête:', error.message);
