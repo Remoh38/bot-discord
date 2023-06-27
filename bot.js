@@ -94,8 +94,6 @@ ws.onerror = (error) => {
 
 
 function repondre(channelId,message){
-
-  //message = null;
   
   const msgSend = {
     content: message
