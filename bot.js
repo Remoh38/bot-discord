@@ -112,8 +112,10 @@ ws.onerror = (error) => {
         resolve(response.data);
       })
       .catch(error => {
+        
         //console.error('Erreur lors de la requête:', error.message);
         console.error(error);
+
       });
 
     })
