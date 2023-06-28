@@ -36,7 +36,7 @@ class Pendu{
 
   }
 
-  async commande(pseudo,idPseudo,command,attribut,option1,option2){
+  async commande(pseudo,idPseudo,command,attribut,reponseComplete){
 
     if(this.inGame()){
       clearTimeout(this.idTImeOutFinPartie);

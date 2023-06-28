@@ -36,7 +36,7 @@ class Quizz{
     //this.repondre('**QUIZZ** initalisé !');
   }
 
-  async commande(pseudo,idPseudo,command,attribut,option1,option2){
+  async commande(pseudo,idPseudo,command,attribut,reponseComplete){
     
     if(this.inGame()){
       clearTimeout(this.idTImeOutFinPartie);
@@ -114,8 +114,8 @@ class Quizz{
       case 'r':
       case 'reponse':
 
-        if(!(attribut.length == 1))
-        return;
+        /* if(!(attribut.length == 1))
+        return; */
 
         if(!this.inGame()){
 
@@ -131,7 +131,7 @@ class Quizz{
 
           let indPlayer = this.listePlayer.findIndex(player => player.getId() == idPseudo);
 
-          if(this.joue(attribut)){
+          if(this.joue(reponseComplete)){
 
             if(this.controleGagne()){
 
@@ -244,6 +244,7 @@ class Quizz{
     let trouve = false;
 
     this.reponse.split('').forEach((l,i) => {
+      
       if(this.reponseEtoile[i] == '*' && l == lettre.toUpperCase()){
         
         let charArray = this.reponseEtoile.split(''); // Conversion en tableau de caractères
@@ -253,6 +254,7 @@ class Quizz{
         trouve = true
 
       }
+
     })
 
     return trouve;

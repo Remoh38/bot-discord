@@ -25,19 +25,18 @@ class Game{
     
     const command = texteReception.length > 0 ? texteReception.shift().toLowerCase() : '';
     const attribut = texteReception.length > 0 ? texteReception.shift().toLowerCase() : '';
-    const option1 = texteReception.length > 0 ? texteReception.shift().toLowerCase() : '';
-    const option2 = texteReception.length > 0 ? texteReception.shift().toLowerCase() : '';
+    const reponseComplete = texteReception.length > 0 ? texteReception.join(' ').toLowerCase() : '';
 
     switch (channelId) {
       case process.env.CHANNELIDPENDU:
         
-        this.pendu.commande(pseudo,idPseudo,command,attribut,option1,option2);
+        this.pendu.commande(pseudo,idPseudo,command,attribut,reponseComplete);
 
         break;
       
       case process.env.CHANNELIDQUIZZ:
         
-        this.quizz.commande(pseudo,idPseudo,command,attribut,option1,option2);
+        this.quizz.commande(pseudo,idPseudo,command,attribut,reponseComplete);
 
         break;
     
