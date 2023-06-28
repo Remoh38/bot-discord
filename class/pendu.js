@@ -205,11 +205,12 @@ class Pendu{
     return new Promise(resolve => {
 
       fs.readFile('./jeux/pendu/mots.csv', 'utf8', (err, data) => {
+        
         if (err) {
           console.error(`Une erreur s'est produite lors de la lecture du fichier :`, err);
           return;
         }
-        
+
         let tabMot = data.split('\n');
         let indRand = parseInt(Math.random() * tabMot.length);
 
@@ -234,9 +235,9 @@ class Pendu{
     this.motAChercher.split('').forEach((l,i) => {
       if(this.motEtoile[i] == '*' && l == lettre.toUpperCase()){
         
-        let charArray = this.motEtoile.split(""); // Conversion en tableau de caractères
+        let charArray = this.motEtoile.split(''); // Conversion en tableau de caractères
         charArray[i] = lettre.toUpperCase(); // Remplacement du deuxième caractère (index 1)
-        this.motEtoile = charArray.join(""); // Conversion du tableau en chaîne de caractères
+        this.motEtoile = charArray.join(''); // Conversion du tableau en chaîne de caractères
        
         trouve = true
 

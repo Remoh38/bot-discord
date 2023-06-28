@@ -1,4 +1,6 @@
 const Player = require('./player');
+const fs = require('fs');
+var deburr = require('lodash.deburr');
 
 class Quizz{
   constructor(channelId,funcRepondre){
@@ -10,6 +12,10 @@ class Quizz{
     this.dureeInnactivite = 30000;
 
     this.partieStart = false;
+
+    this.question = '';
+    this.reponse = '';
+    this.ReponseEtoile = '';
 
     this.commandeGame = `**liste des commandes: (QUIZZ)**
 \`\`\`
@@ -30,7 +36,7 @@ class Quizz{
     //this.repondre('**QUIZZ** initalisé !');
   }
 
-  commande(pseudo,idPseudo,command,attribut,option1,option2){
+  async commande(pseudo,idPseudo,command,attribut,option1,option2){
     
     if(this.inGame()){
       clearTimeout(this.idTImeOutFinPartie);
@@ -76,7 +82,7 @@ class Quizz{
 
         if(!this.inGame()){
 
-          this.nouvellePartie();
+          this.nouvellePartie(true);
 
           clearTimeout(this.idTImeOutFinPartie);
           this.idTImeOutFinPartie = setTimeout(() => {
@@ -105,9 +111,51 @@ class Quizz{
 
         break;
 
-      default:
+      case 'r':
+      case 'reponse':
 
-        this.repondre(command);
+        if(!(attribut.length == 1))
+        return;
+
+        if(!this.inGame()){
+
+          this.repondre(`**${pseudo}** action impossible! , le jeu n'est pas lancé (!start) !`)
+          return ;
+        }
+
+        if(!this.isInGame(idPseudo)){
+        
+          this.repondre(`**${pseudo}** action impossible! , vous n'êtes pas dans la partie (!join)!`)
+
+        } else {
+
+          let indPlayer = this.listePlayer.findIndex(player => player.getId() == idPseudo);
+
+          if(this.joue(attribut)){
+
+            if(this.controleGagne()){
+
+              this.listePlayer[indPlayer].point += 5;	
+              await this.repondre(`**FELICITATION ${pseudo}!**\nla réponse était: ${this.getReponseEtoile()}\n**CLASSEMENT QUIZZ**\n${this.recupListePlayer()}`);
+                            
+              await this.nouvellePartie(false);
+
+            } else {
+
+              this.listePlayer[indPlayer].point ++;
+              await this.repondre(`**BRAVO ${pseudo}!**\n${this.getQuestion()}\nréponse: ${this.getReponseEtoile()}`);
+
+            }
+
+          } else {
+
+            this.listePlayer[indPlayer].point = this.listePlayer[indPlayer].point > 0 ? this.listePlayer[indPlayer].point - 1 : 0; 
+            await this.repondre(`**PERDU ${pseudo}!**\n${this.getQuestion()}\nréponse: ${this.getReponseEtoile()}`);
+
+          }
+
+
+        }
 
         break;
     }
@@ -132,10 +180,94 @@ class Quizz{
 
   inGame(){return this.partieStart}
 
-  nouvellePartie(){
+  async nouvellePartie(start){
 
-    this.partieStart = true;
-    this.repondre(`lancement d'une nouvelle partie`);
+    if(start){
+      this.partieStart = true;
+      await this.razScore();
+      await this.repondre(`Lancement d'une nouvelle partie\nRéinitialisation des scores !\n${this.recupListePlayer()}`);
+    }
+
+    const questionReponse = await this.tirerQuestion();
+    this.question = questionReponse[0];
+    this.reponse = deburr(questionReponse[1]).toUpperCase();
+    await this.masqueReponse();
+
+    await this.repondre(`**------NOUVELLE QUESTION------**\n${this.getQuestion()}\nréponse: ${this.getReponseEtoile()}`);
+
+  }
+
+  masqueReponse(){
+
+    let Lettre = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    this.reponseEtoile = '';
+
+    return new Promise(resolve => {
+      this.reponse.split('').forEach((caract,i) => {
+        this.reponseEtoile += Lettre.indexOf(caract) == -1 ? caract : '*';
+        
+        if(i == this.reponse.length - 1){resolve()}
+      })
+    })
+
+  }
+
+
+  tirerQuestion(){
+
+    return new Promise(resolve => {
+
+      fs.readFile('./jeux/quizz/question.csv', 'utf8', (err, data) => {
+        
+        if (err) {
+          console.error(`Une erreur s'est produite lors de la lecture du fichier :`, err);
+          return;
+        }
+
+        let tabQuestion = data.split('\n');
+        let indRand = parseInt(Math.random() * tabQuestion.length);
+        
+        resolve(tabQuestion[indRand].split(';'));
+        
+      });
+
+    })
+
+  }
+
+  controleGagne(){
+    return this.reponse == this.reponseEtoile;
+  }
+
+  joue(lettre){
+
+    let trouve = false;
+
+    this.reponse.split('').forEach((l,i) => {
+      if(this.reponseEtoile[i] == '*' && l == lettre.toUpperCase()){
+        
+        let charArray = this.reponseEtoile.split(''); // Conversion en tableau de caractères
+        charArray[i] = lettre.toUpperCase(); // Remplacement du deuxième caractère (index 1)
+        this.reponseEtoile = charArray.join(''); // Conversion du tableau en chaîne de caractères
+       
+        trouve = true
+
+      }
+    })
+
+    return trouve;
+  }
+
+
+  getQuestion(){
+
+    return  '```' + this.question + ' ?```';
+
+  }
+
+  getReponseEtoile(){
+
+    return  '```' + this.reponseEtoile + '```';
 
   }
 
