@@ -210,10 +210,10 @@ class Pendu{
           return;
         }
       
-        let tabMot = data.split('\r\n');
+        let tabMot = data.split('\r');
         let indRand = parseInt(Math.random() * tabMot.length);
 
-        resolve(tabMot[indRand].substring(0,5));
+        resolve(tabMot[indRand]);
         
       });
 
