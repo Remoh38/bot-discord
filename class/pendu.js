@@ -206,7 +206,7 @@ class Pendu{
 
       fs.readFile('./jeux/pendu/mots.csv', 'utf8', (err, data) => {
         if (err) {
-          console.error('Une erreur s\'est produite lors de la lecture du fichier :', err);
+          console.error(`Une erreur s'est produite lors de la lecture du fichier :`, err);
           return;
         }
       
