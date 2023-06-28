@@ -36,7 +36,7 @@ class Pendu{
 
   }
 
-  commande(pseudo,idPseudo,command,attribut,option1,option2){
+  async commande(pseudo,idPseudo,command,attribut,option1,option2){
 
     if(this.inGame()){
       clearTimeout(this.idTImeOutFinPartie);
@@ -82,7 +82,7 @@ class Pendu{
         
         if(!this.inGame()){
 
-          this.nouvellePartie();
+          this.nouvellePartie(true);
 
           clearTimeout(this.idTImeOutFinPartie);
           this.idTImeOutFinPartie = setTimeout(() => {
@@ -134,33 +134,24 @@ class Pendu{
 
           if(this.joue(attribut)){
 
-            this.repondre(`**------PENDU------**`)
-
             if(this.controleGagne()){
 
               this.listePlayer[indPlayer].point += 5;	
-              this.repondre(`**FELICITATION ${pseudo}!**`);
-              this.repondre(`le mot était: ` + this.getMotEtoile());
-              
-              this.repondre(`**CLASSEMENT PENDU**`)
-              this.repondre(this.recupListePlayer());
+              await this.repondre(`**FELICITATION ${pseudo}!**\nle mot était: ${this.getMotEtoile()}\n**CLASSEMENT PENDU**\n${this.recupListePlayer()}`);
                             
-              this.tirerMot();
+              await this.nouvellePartie(false);
 
             } else {
 
               this.listePlayer[indPlayer].point ++;
-              this.repondre(`**BRAVO ${pseudo}!**`);
-              this.repondre('mot à trouver: ' + this.getMotEtoile());
+              await this.repondre(`**BRAVO ${pseudo}!**\nmot à trouver: ${this.getMotEtoile()}`);
 
             }
 
           } else {
 
-            this.repondre(`**------PENDU------**`);
             this.listePlayer[indPlayer].point = this.listePlayer[indPlayer].point > 0 ? this.listePlayer[indPlayer].point - 1 : 0; 
-            this.repondre(`**PERDU ${pseudo}!**`);
-            this.repondre('mot à trouver: ' + this.getMotEtoile());
+            await this.repondre(`**PERDU ${pseudo}!**\nmot à trouver: ${this.getMotEtoile()}`);
 
           }
 
@@ -191,41 +182,18 @@ class Pendu{
 
   inGame(){return this.partieStart}
 
-  nouvellePartie(){
-
-    this.partieStart = true;
-    this.repondre(`lancement d'une nouvelle partie`).then(() => {
-
-      this.repondre(`Réinitialisation des scores !`).then(() => {
-
-        this.razScore();
-
-        this.repondre(this.recupListePlayer()).then(() => {
-
-          this.tirerMot().then(mot => {
-
-            this.motAChercher = deburr(mot).toUpperCase();
-            this.motEtoile = '';
-            this.motEtoile = ''.padEnd(this.motAChercher.length,'*');
-
-            this.repondre("**------PENDU------**").then(() => {
-
-              this.repondre('mot à trouver: ' + this.getMotEtoile());
-
-            });
-            
-          });
-
-        })
-
-      });
-
-    });
+  async nouvellePartie(start) {
+    if(start){
+      this.partieStart = true;
+      await this.razScore();
+      await this.repondre(`Lancement d'une nouvelle partie\nRéinitialisation des scores !\n${this.recupListePlayer()}`);
+    }
     
-
-    
-
-  }
+    const mot = await this.tirerMot();
+    this.motAChercher = deburr(mot).toUpperCase();
+    this.motEtoile = ''.padEnd(this.motAChercher.length, '*');
+    await this.repondre(`**------NOUVEAU MOT------**\nMot à trouver : ${this.getMotEtoile()}`);
+ }
 
   finPartie(){
     this.partieStart = false;
@@ -283,8 +251,19 @@ class Pendu{
   }
 
   razScore(){
+    
+    return new Promise(resolve => {
+      
+      this.listePlayer.forEach((player,i) => {
+        player.point = 0;
+        if(i == (this.listePlayer.length - 1))
+          resolve();
+      });
 
-    this.listePlayer.forEach(player => player.point = 0);
+      if(this.listePlayer.length == 0)
+        resolve();
+
+    })
 
   }
 
