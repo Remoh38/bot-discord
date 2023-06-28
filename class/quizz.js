@@ -274,6 +274,7 @@ class Quizz{
   }
 
   finPartie(){
+    this.partieStart = false;
     this.repondre('fin de partie');
     this.razScore();
   }
