@@ -5,7 +5,7 @@ const WebSocket = require('ws');
 const axios = require('axios');
 
 
-const port = 3000;
+const port = 3000 || process.env.PORT;
 const apiKey = process.env.APIKEY;
 const urlWs = "wss://gateway.discord.gg"
 const urlHttpPost = `https://discord.com/api/v10/channels/`;
