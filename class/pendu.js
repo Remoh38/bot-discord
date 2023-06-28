@@ -209,8 +209,8 @@ class Pendu{
           console.error(`Une erreur s'est produite lors de la lecture du fichier :`, err);
           return;
         }
-        console.log(data)
-        let tabMot = data.split('\r');
+        
+        let tabMot = data.split('\n');
         let indRand = parseInt(Math.random() * tabMot.length);
 
         resolve(tabMot[indRand]);
