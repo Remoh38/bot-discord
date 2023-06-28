@@ -213,7 +213,7 @@ class Pendu{
         let tabMot = data.split('\r\n');
         let indRand = parseInt(Math.random() * tabMot.length);
 
-        resolve(tabMot[indRand]);
+        resolve(tabMot[indRand].substring(0,5));
         
       });
 
