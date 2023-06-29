@@ -301,7 +301,7 @@ class Quizz{
           return;
         }
 
-        let tabQuestion = data.split('\r\n');
+        let tabQuestion = data.split('\n');
         let indRand = parseInt(Math.random() * tabQuestion.length);
         
         resolve(tabQuestion[indRand].split(';'));
