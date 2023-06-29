@@ -67,11 +67,8 @@ ws.onmessage = (message) => {
     case 0:
 
       if(messRecup.t == "MESSAGE_CREATE" && tabChannel.indexOf(messRecup.d.channel_id) != -1){
-
-        if(!messRecup.d.content.startsWith('!'))
-          return;
       
-        myGame.analyseCommande(messRecup.d.channel_id,messRecup.d.content.slice(1).split(' '),messRecup.d.author.username,messRecup.d.author.id);
+        myGame.analyseCommande(messRecup.d.channel_id,messRecup.d.content,messRecup.d.author.username,messRecup.d.author.id);
 
       }
   

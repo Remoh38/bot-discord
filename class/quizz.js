@@ -9,7 +9,10 @@ class Quizz{
     this.listePlayer = [];
 
     this.idTImeOutFinPartie = null;
-    this.dureeInnactivite = 30000;
+    this.idTImeOutDevoileLettre = null;
+    this.dureeInnactivite = 60000;
+
+    this.pointDonne = 10;
 
     this.partieStart = false;
 
@@ -37,14 +40,14 @@ class Quizz{
   }
 
   async commande(pseudo,idPseudo,command,attribut,reponseComplete){
-    
+   
     if(this.inGame()){
       clearTimeout(this.idTImeOutFinPartie);
       this.idTImeOutFinPartie = setTimeout(() => {
-        this.repondre('fin de partie');
-        this.razScore();
+        this.finPartie()
       },this.dureeInnactivite);
     }
+
     switch (command) {
       case 'join':
 
@@ -131,30 +134,46 @@ class Quizz{
 
           let indPlayer = this.listePlayer.findIndex(player => player.getId() == idPseudo);
 
-          if(this.joue(reponseComplete)){
+          reponseComplete = reponseComplete.split(' ');
+          reponseComplete.shift();
 
-            if(this.controleGagne()){
+          if(this.controleGagne(reponseComplete.join(' '))){
 
-              this.listePlayer[indPlayer].point += 5;	
-              await this.repondre(`**FELICITATION ${pseudo}!**\nla réponse était: ${this.getReponseEtoile()}\n**CLASSEMENT QUIZZ**\n${this.recupListePlayer()}`);
-                            
-              await this.nouvellePartie(false);
-
-            } else {
-
-              this.listePlayer[indPlayer].point ++;
-              await this.repondre(`**BRAVO ${pseudo}!**\n${this.getQuestion()}\nréponse: ${this.getReponseEtoile()}`);
-
-            }
-
-          } else {
-
-            this.listePlayer[indPlayer].point = this.listePlayer[indPlayer].point > 0 ? this.listePlayer[indPlayer].point - 1 : 0; 
-            await this.repondre(`**PERDU ${pseudo}!**\n${this.getQuestion()}\nréponse: ${this.getReponseEtoile()}`);
+            this.listePlayer[indPlayer].point += this.pointDonne;	
+            await this.repondre(`**FELICITATION ${pseudo}!**\nla réponse était: ${this.reponse}\n${await this.recupListePlayer()}`);
+                          
+            await this.nouvellePartie(false);
 
           }
 
 
+        }
+
+        break;
+
+      default:
+
+        /* if(!this.inGame()){
+
+          this.repondre(`**${pseudo}** action impossible! , le jeu n'est pas lancé (!start) !`)
+          return ;
+        } */
+        if(this.inGame()){
+          if(this.isInGame(idPseudo)){
+
+            let indPlayer = this.listePlayer.findIndex(player => player.getId() == idPseudo);
+
+            if(this.controleGagne(reponseComplete)){
+
+              this.listePlayer[indPlayer].point += this.pointDonne;	
+              await this.repondre(`**FELICITATION ${pseudo}!**\nla réponse était: ${this.reponse}\n${await this.recupListePlayer()}`);
+                            
+              await this.nouvellePartie(false);
+
+            }
+
+
+          }
         }
 
         break;
@@ -170,11 +189,11 @@ class Quizz{
 
   recupListePlayer(){
 
-    return this.listePlayer.length == 0 ? `Aucun joueur actuellement` : `**liste des joueurs dans le jeu:**
+    return this.listePlayer.length == 0 ? `Aucun joueur actuellement` : `**classement QUIZZ:**\`\`\`
     ${
       this.listePlayer.sort((a,b) => a.point - b.point).map(player =>  "-" + player.getName() + "- " + player.getPoint() + " pt(s)")
     }
-    `     
+    \`\`\``     
 
   }
 
@@ -188,13 +207,28 @@ class Quizz{
       await this.repondre(`Lancement d'une nouvelle partie\nRéinitialisation des scores !\n${this.recupListePlayer()}`);
     }
 
+    this.pointDonne = 10;
+    clearTimeout(this.idTImeOutDevoileLettre);
+    this.idTImeOutDevoileLettre = setTimeout(() => {
+      this.devoileLettre(1)
+    },10000)
+
     const questionReponse = await this.tirerQuestion();
     this.question = questionReponse[0];
     this.reponse = deburr(questionReponse[1]).toUpperCase();
     await this.masqueReponse();
 
-    await this.repondre(`**------NOUVELLE QUESTION------**\n${this.getQuestion()}\nréponse: ${this.getReponseEtoile()}`);
 
+
+    await this.repondre(`**------NOUVELLE QUESTION------**\n${this.getQuestion(10)}\nréponse: ${this.getReponseEtoile()}`);
+
+  }
+
+  finPartie(){
+    this.partieStart = false;
+    clearTimeout(this.idTImeOutFinPartie);
+    clearTimeout(this.idTImeOutDevoileLettre);
+    this.repondre('fin de partie');
   }
 
   masqueReponse(){
@@ -212,6 +246,49 @@ class Quizz{
 
   }
 
+  async devoileLettre(tirage){
+
+    let nbEtoile = (this.reponseEtoile.match(/\*/g) || []).length;
+
+    nbEtoile = parseInt(nbEtoile / (6 - tirage));
+    if(nbEtoile == 0)
+      nbEtoile = 1
+
+    while(nbEtoile > 0){
+
+      let random = parseInt(Math.random() * this.reponseEtoile.length);
+      while(this.reponseEtoile[random] != '*'){
+        random = parseInt(Math.random() * this.reponseEtoile.length);
+      }
+
+      let charArray = this.reponseEtoile.split(''); // Conversion en tableau de caractères
+      charArray[random] = this.reponse[random]; // Remplacement du deuxième caractère (index 1)
+      this.reponseEtoile = charArray.join(''); // Conversion du tableau en chaîne de caractères
+
+
+      nbEtoile--;
+    }
+
+    this.pointDonne = parseInt(this.pointDonne / 2);
+    
+    if(tirage < 4){
+
+      await this.repondre(`**------QUESTION------**\n${this.getQuestion(this.pointDonne)}\nréponse: ${this.getReponseEtoile()}`);
+      this.idTImeOutDevoileLettre = setTimeout(() => {
+        this.devoileLettre(tirage + 1);
+      },10000)
+
+    } else {
+
+      await this.repondre(`**------PERDU------**\nle mot était: ${this.reponse}\n`);
+      await this.nouvellePartie(false);
+
+    }
+
+    
+
+  }
+
 
   tirerQuestion(){
 
@@ -224,7 +301,7 @@ class Quizz{
           return;
         }
 
-        let tabQuestion = data.split('\n');
+        let tabQuestion = data.split('\r\n');
         let indRand = parseInt(Math.random() * tabQuestion.length);
         
         resolve(tabQuestion[indRand].split(';'));
@@ -235,8 +312,8 @@ class Quizz{
 
   }
 
-  controleGagne(){
-    return this.reponse == this.reponseEtoile;
+  controleGagne(reponse){
+    return this.reponse === deburr(reponse).toUpperCase();
   }
 
   joue(lettre){
@@ -261,9 +338,9 @@ class Quizz{
   }
 
 
-  getQuestion(){
+  getQuestion(point){
 
-    return  '```' + this.question + ' ?```';
+    return  '```' + this.question  + ' ? (' + point + ' points)```';
 
   }
 
@@ -271,12 +348,6 @@ class Quizz{
 
     return  '```' + this.reponseEtoile + '```';
 
-  }
-
-  finPartie(){
-    this.partieStart = false;
-    this.repondre('fin de partie');
-    this.razScore();
   }
 
   razScore(){

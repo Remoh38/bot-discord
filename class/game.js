@@ -22,13 +22,21 @@ class Game{
   }
 
   analyseCommande(channelId,texteReception,pseudo,idPseudo){
+
+    if(process.env.BOTID == idPseudo){
+      return;
+    }
     
+    const reponseComplete = texteReception;
+    texteReception = texteReception.slice(1).split(' ')
     const command = texteReception.length > 0 ? texteReception.shift().toLowerCase() : '';
     const attribut = texteReception.length > 0 ? texteReception.shift().toLowerCase() : '';
-    const reponseComplete = texteReception.length > 0 ? texteReception.join(' ').toLowerCase() : '';
 
     switch (channelId) {
       case process.env.CHANNELIDPENDU:
+
+        if(!reponseComplete.startsWith('!'))
+            return;
         
         this.pendu.commande(pseudo,idPseudo,command,attribut,reponseComplete);
 
